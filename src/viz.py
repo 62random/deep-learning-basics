@@ -4,6 +4,8 @@ from keras.datasets import cifar10
 from math import ceil
 from keras.utils import plot_model
 from PIL.Image import fromarray
+import seaborn as sns
+import pandas as pd
 
 
 # Visualize a specified set of mnist records
@@ -46,3 +48,17 @@ def plot_history_metrics(history, metrics):
         plt.xlabel('epoch')
         plt.legend([metrics[i], f'val_{metrics[i]}'], loc='upper left')
         plt.show()
+
+
+def analyse_accuracy(histories, names):
+    accs = [max(x.history['accuracy']) for x in histories]
+    val_accs = [max(x.history['val_accuracy']) for x in histories]
+
+    df = pd.DataFrame({'version': names * 2,
+                       'accuracy': accs + val_accs,
+                       'when': ['train'] * len(names) + ['validation'] * len(names)
+                       })
+
+    sns.barplot(x='version', y='accuracy', hue='when', data=df)
+    plt.ylim(df['accuracy'].min() - 0.05, 1)
+    plt.legend(loc='lower left')
