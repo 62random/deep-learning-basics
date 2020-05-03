@@ -1,6 +1,7 @@
 import matplotlib.pyplot as plt
 from keras.datasets import mnist 
 from keras.datasets import cifar10
+from keras.datasets import fashion_mnist
 from math import ceil
 from keras.utils import plot_model
 from PIL.Image import fromarray
@@ -11,6 +12,16 @@ import pandas as pd
 # Visualize a specified set of mnist records
 def visualize_mnist(indices):
     (x_train, _), _ = mnist.load_data()
+    cols = 5
+    rows = ceil(len(indices)/float(cols))
+    for i in range(len(indices)):
+        plt.subplot(rows, cols, i + 1)
+        plt.imshow(x_train[indices[i]], cmap=plt.get_cmap('gray'))
+
+
+# Visualize a specified set of mnist records
+def visualize_fashion_mnist(indices):
+    (x_train, _), _ = fashion_mnist.load_data()
     cols = 5
     rows = ceil(len(indices)/float(cols))
     for i in range(len(indices)):
