@@ -1,5 +1,5 @@
 import tensorflow as tf
-from tensorflow.keras.models import Sequential
+from tensorflow.keras.models import Model, Sequential
 from tensorflow.keras.layers import Dense, Dropout, Flatten, BatchNormalization
 from tensorflow.keras.layers import Conv2D, MaxPooling2D
 import numpy as np
@@ -399,3 +399,15 @@ def create_compile_cinic_v3(input_shape, num_classes, epochs, lr):
                   metrics=['accuracy']
                   )
     return model
+
+
+# Returns a model with the activations of Conv2D and MaxPooling2D layers of a model
+def layer_outputs_model(model):
+    names = []
+    output_layers = []
+    for layer in model.layers:
+        if isinstance(layer, Conv2D) or isinstance(layer, MaxPooling2D):
+            output_layers.append(layer.output)
+            names.append(layer.name)
+
+    return Model(inputs=model.input, outputs=output_layers), names

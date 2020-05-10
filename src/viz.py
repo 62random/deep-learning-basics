@@ -7,6 +7,7 @@ from keras.utils import plot_model
 from PIL.Image import fromarray
 import seaborn as sns
 import pandas as pd
+import numpy as np
 
 
 # Visualize a specified set of mnist records
@@ -73,3 +74,55 @@ def analyse_accuracy(histories, names):
     sns.barplot(x='version', y='accuracy', hue='when', data=df)
     plt.ylim(df['accuracy'].min() - 0.05, 1)
     plt.legend(loc='lower left')
+
+
+# Function to visualize a model's prediction of an image
+def visualize_prediction(model, x_test, index, layer_outputs_model, names, labels=None):
+    plt.imshow(fromarray(((x_test[index])*255).astype(np.uint8)))
+    plt.show()
+    tensor = np.expand_dims(x_test[index], axis=0)
+    if len(tensor.shape) == 3:
+        tensor = tensor.reshape(tensor.shape[0], tensor.shape[1], tensor.shape[2], 1)
+    print('Prediction probabilities: ')
+    print(model.predict(tensor))
+    print('Predicted class: ')
+    preds = model.predict_classes(tensor)
+    if labels:
+        print([labels[p] for p in preds])
+    else:
+        print(preds)
+
+    print("Activations of Convolutional and Pooling layers:")
+    activations = layer_outputs_model.predict(tensor)
+    visualize_activations(activations, names)
+
+
+# Function to visualize activations of a deep CNN
+def visualize_activations(activations, names):
+    images_per_line = 16
+
+    for layer_name, layer_activation in zip(names, activations):
+        n_features = layer_activation.shape[-1]
+        width = layer_activation.shape[1]
+        height = layer_activation.shape[2]
+        n_lines = -(-n_features // images_per_line)
+
+        display_grid = np.zeros((height * n_lines, images_per_line * width))
+        for lin in range(n_lines):
+            for col in range(images_per_line):
+                if lin * images_per_line + col >= n_features:
+                    break
+                picture = layer_activation[0, :, :, lin * images_per_line + col]
+                picture -= picture.mean()
+                picture /= picture.std()
+                picture *= 64
+                picture += 128
+                picture = np.clip(picture, 0, 255).astype('uint8')  # < 0 -> 0; > 255 -> 255
+                display_grid[lin * height: (lin + 1) * height, col * width: (col + 1) * width] = picture
+        h_scale = 1. / width
+        v_scale = 1. / height
+        plt.figure(figsize=(h_scale * display_grid.shape[1],
+                            v_scale * display_grid.shape[0]))
+        plt.title(layer_name)
+        plt.grid(False)
+        plt.imshow(display_grid, aspect='auto', cmap='viridis')
