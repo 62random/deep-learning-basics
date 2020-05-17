@@ -10,9 +10,38 @@ import pandas as pd
 import numpy as np
 
 
+# Translate the fashion-mnist labels
+def fashion_label(x):
+    if x == 0:
+        return 'T-shirt/top'
+    elif x == 1:
+        return 'Trouser'
+    elif x == 2:
+        return 'Pullover'
+    elif x == 3:
+        return 'Dress'
+    elif x == 4:
+        return 'Coat'
+    elif x == 5:
+        return 'Sandal'
+    elif x == 6:
+        return 'Shirt'
+    elif x == 7:
+        return 'Sneaker'
+    elif x == 8:
+        return 'Bag'
+    elif x == 9:
+        return 'Ankle boot'
+    else:
+        return 'wtf??'    
+
 # Visualize a specified set of mnist records
-def visualize_mnist(indices):
-    (x_train, _), _ = mnist.load_data()
+def visualize_mnist(indices, data=None):
+    if data is None:
+        (x_train, _), _ = mnist.load_data()
+    else:
+        x_train = data
+    
     cols = 5
     rows = ceil(len(indices)/float(cols))
     for i in range(len(indices)):
@@ -52,6 +81,7 @@ def print_model(model, file):
 # Visualize evolution of a specified set of metrics
 # during a model's training
 def plot_history_metrics(history, metrics):
+    plt.figure()
     for i in range(len(metrics)):
         plt.plot(history.history[metrics[i]])
         plt.plot(history.history[f'val_{metrics[i]}'])
@@ -126,3 +156,67 @@ def visualize_activations(activations, names):
         plt.title(layer_name)
         plt.grid(False)
         plt.imshow(display_grid, aspect='auto', cmap='viridis')
+
+
+# Function to visually compare input and predictions in autoencoders
+# todo: implement display of generic number of images (not always 10)
+def visualize_predictions(autoencoder, x_test):
+    predicted_images = autoencoder.predict(x_test)
+    
+    # Original Images
+    print("Original Images - first 10 images of test dataset")
+    plt.figure(figsize=(30, 1))
+    for i in range(10):
+        ax = plt.subplot(1, 20, i + 1)
+        plt.imshow(x_test[i].reshape(28, 28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.show()
+    
+    # Display Decoded Images
+    print("Decoded Images - predictions of first 10 images of test dataset")
+    plt.figure(figsize=(30, 1))
+    for i in range(10):
+        ax = plt.subplot(1, 20, i+ 1)
+        plt.imshow(predicted_images[i].reshape(28, 28))
+        plt.gray()
+        ax.get_xaxis().set_visible(False)
+        ax.get_yaxis().set_visible(False)
+    plt.show()
+    
+
+    
+##################################################################################
+# VARIATIONAL AUTO ENCODERS
+    
+# Function to visualize  bidimensional latent vectors produced by a
+# variational auto encoder
+def plot_latent_v1(t_test, y_test):
+    # grafico do latent vector t_test colorido pelos valores dos digitos nas imagens de input
+    plt.figure(figsize=(8, 6))
+    plt.scatter(t_test[:, 0], t_test[:, 1], marker='x', s=6.0, c=y_test,  cmap='brg')
+    plt.colorbar();
+    plt.show()
+
+# Function to visualize  bidimensional latent vectors produced by a
+# variational auto encoder - another version
+def plot_latent_v2(t_test, y_test, fashion_mnist=False):   
+    plt.figure(figsize=(8, 6))
+    plt.scatter(t_test[:, 0], t_test[:, 1],s=1, c=y_test, cmap='brg')
+    plt.colorbar();
+    count=0;
+    plt.tight_layout()
+    for label, x, y in zip(y_test, t_test[:, 0], t_test[:, 1]):
+        if count % 350 == 0:
+            plt.annotate(fashion_label(int(label)) if fashion_mnist else str(int(label)),
+                         xy=(x,y), 
+                         color='black', 
+                         weight='normal',
+                         size=10,
+                         bbox=dict(boxstyle="round4,pad=.5", fc="0.8"))
+        count = count + 1
+    plt.show()
+    
+    
+##################################################################################
